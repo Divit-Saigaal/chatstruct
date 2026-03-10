@@ -92,14 +92,16 @@ function handleBotCommand(msg, text, chatName) {
   return false;
 }
 
-// ─── Client Setup ─────────────────────────────────────────────────────────────
-let client = new Client({
-  authStrategy: new LocalAuth(),
-  puppeteer: {
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  }
-});
+function createClient() {
+  return new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    }
+  });
+}
+
 // ─── Init & Auto-Reinit ───────────────────────────────────────────────────────
 function attachClientHandlers() {
   client.on('qr', qr => {
@@ -175,10 +177,14 @@ function attachClientHandlers() {
   });
 }
 
+// Module-level client reference (created in startBot)
+let client = null;
+
 function startBot() {
   console.log('🤖 Initializing WhatsApp bot...');
   botStatus = 'initializing';
-  attachClientHandlers();
+  client = createClient();       // ← create fresh client first
+  attachClientHandlers();        // ← then attach listeners
   client.initialize().catch(err => {
     console.error('Bot init error:', err);
   });

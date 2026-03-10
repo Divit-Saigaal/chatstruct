@@ -30,6 +30,7 @@ function AppInner() {
   
   const [waStatus, setWaStatus] = useState('initializing'); // 'initializing' | 'awaiting_qr' | 'authenticated' | 'ready' | 'disconnected'
   const connected = waStatus === 'ready';
+  const [showQRModal, setShowQRModal] = useState(false);
 
   const [activePage, setActivePage] = useState('dashboard');
   const [messages,   setMessages]   = useState([]);
@@ -157,7 +158,6 @@ function AppInner() {
   }
 
   function renderPage() {
-    if (!connected) return <WhatsAppLogin />;
 
     switch (activePage) {
       case 'dashboard':
@@ -207,6 +207,21 @@ function AppInner() {
             />
           </form>
 
+          {/* Connect WhatsApp button when offline */}
+          {!connected && (
+            <button
+              onClick={() => setShowQRModal(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 14px', borderRadius: 10,
+                border: '1px solid #fde68a', background: '#fffbeb',
+                cursor: 'pointer', color: '#b45309', fontSize: 12, fontWeight: 600,
+              }}
+            >
+              📲 Connect WhatsApp
+            </button>
+          )}
+
           <div style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
             borderRadius: 8,
@@ -250,11 +265,28 @@ function AppInner() {
                 padding: '6px 14px', borderRadius: 10,
                 border: '1px solid #e2e8f0', background: 'white',
                 cursor: logoutLoading ? 'not-allowed' : 'pointer',
-                color: '#64748b', fontSize: 13, fontWeight: 600,
+                color: '#64748b', fontSize: 12, fontWeight: 600,
                 opacity: logoutLoading ? 0.6 : 1, transition: 'all 0.15s'
               }}
             >
               {logoutLoading ? 'Logging out...' : 'Logout WhatsApp'}
+            </button>
+          )}
+          {!connected && (
+            <button
+              onClick={handleLogout}
+              disabled={logoutLoading}
+              title="Reset & get new QR"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 14px', borderRadius: 10,
+                border: '1px solid #e2e8f0', background: 'white',
+                cursor: logoutLoading ? 'not-allowed' : 'pointer',
+                color: '#94a3b8', fontSize: 12, fontWeight: 600,
+                opacity: logoutLoading ? 0.6 : 1, transition: 'all 0.15s'
+              }}
+            >
+              {logoutLoading ? 'Resetting...' : '↺ Reset QR'}
             </button>
           )}
 
@@ -267,6 +299,26 @@ function AppInner() {
           {renderPage()}
         </div>
       </div>
+
+      {/* QR Modal Overlay */}
+      {showQRModal && (
+        <div
+          onClick={() => setShowQRModal(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000, backdropFilter: 'blur(4px)'
+          }}
+        >
+          <div onClick={e => e.stopPropagation()} style={{
+            background: 'white', borderRadius: 24,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+            maxWidth: 420, width: '90%', overflow: 'hidden'
+          }}>
+            <WhatsAppLogin onClose={() => setShowQRModal(false)} />
+          </div>
+        </div>
+      )}
 
       {toast && (
         <div className="toast-notification">
